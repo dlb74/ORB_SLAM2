@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/scott/projects/ScottLab/ROS/catkin_ws/src/ORB_SLAM2/Pangolin/test/log/testlog.cpp
+sstream
+-
+iostream
+-
+thread
+-
+mutex
+-
+pangolin/log/packetstream_reader.h
+-
+pangolin/log/packetstream_writer.h
+-
+

@@ -1,0 +1,1 @@
+/usr/bin/c++  -fPIC  -Wall   -O3 -march=native -std=c++11  -O3 -DNDEBUG   -shared -Wl,-soname,libgtest.so -o libgtest.so CMakeFiles/gtest.dir/src/gtest-all.cc.o  -L/home/scott/projects/ScottLab/ROS/catkin_ws/src/ORB_SLAM2/build/gtest/src -lpthread -Wl,-rpath,/home/scott/projects/ScottLab/ROS/catkin_ws/src/ORB_SLAM2/build/gtest/src 
