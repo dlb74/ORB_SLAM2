@@ -80,7 +80,7 @@ namespace ORB_SLAM2
         mpMap = new Map();
 
         //Create Drawers. These are used by the Viewer
-        mpFrameDrawer = new FrameDrawer(mpMap);
+        mpFrameDrawer = new FrameDrawer(this,mpMap);
         mpMapDrawer = new MapDrawer(mpMap, strSettingsFile);
 
         //Initialize the Tracking thread
@@ -119,6 +119,9 @@ namespace ORB_SLAM2
 
         mpLoopCloser->SetTracker(mpTracker);
         mpLoopCloser->SetLocalMapper(mpLocalMapper);
+
+        startDetect = false;
+        isDetected = false;
     }
 
     cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timestamp)
@@ -220,6 +223,65 @@ namespace ORB_SLAM2
         mTrackingState = mpTracker->mState;
         mTrackedMapPoints = mpTracker->mCurrentFrame.mvpMapPoints;
         mTrackedKeyPointsUn = mpTracker->mCurrentFrame.mvKeysUn;
+        return Tcw;
+    }
+
+    cv::Mat System::TrackRGBDTrees(const cv::Mat &im, const cv::Mat &depthmap, const double &timestamp, std::vector<Tree> trees)
+    {
+        if(mSensor!=RGBD)
+        {
+            cerr << "ERROR: you called TrackRGBD but input sensor was not set to RGBD." << endl;
+            exit(-1);
+        }
+        //cout<<"trees: "<<trees.size()<<endl;
+        // Check mode change
+        {
+            unique_lock<mutex> lock(mMutexMode);
+            if(mbActivateLocalizationMode)
+            {
+                mpLocalMapper->RequestStop();
+
+                // Wait until Local Mapping has effectively stopped
+                while(!mpLocalMapper->isStopped())
+                {
+                    usleep(1000);
+                }
+
+                mpTracker->InformOnlyTracking(true);
+                mbActivateLocalizationMode = false;
+            }
+            if(mbDeactivateLocalizationMode)
+            {
+                mpTracker->InformOnlyTracking(false);
+                mpLocalMapper->Release();
+                mbDeactivateLocalizationMode = false;
+            }
+        }
+
+        // Check reset
+        {
+        unique_lock<mutex> lock(mMutexReset);
+        if(mbReset)
+        {
+            mpTracker->Reset();
+            mbReset = false;
+        }
+        }
+
+        cv::Mat Tcw = mpTracker->GrabImageRGBD(im,depthmap,timestamp);
+
+        unique_lock<mutex> lock2(mMutexState);
+        mTrackingState = mpTracker->mState;
+        mTrackedMapPoints = mpTracker->mCurrentFrame.mvpMapPoints;
+        mTrackedKeyPointsUn = mpTracker->mCurrentFrame.mvKeysUn;
+
+
+        if (!trees.empty())
+        {
+            treeDB = trees;
+            //cout<<"trees: "<<treeDB.size()<<endl;
+        }
+
         return Tcw;
     }
 
@@ -520,6 +582,12 @@ namespace ORB_SLAM2
     {
         unique_lock<mutex> lock(mMutexState);
         return mpLoopCloser;
+    }
+
+    std::vector<Tree> System::GetTrees()
+    {
+        unique_lock<mutex> lock(mMutexState);
+        return treeDB;
     }
 
 

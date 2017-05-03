@@ -236,18 +236,6 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const d
 
     Track();
 
-
-//    cv::Mat imdepth;
-//    cv_ptrRGB->image.copyTo(imdepth);
-
-//    cv::rectangle(imdepth, cv::Point(100, 100), cv::Point(200, 200), cv::Scalar(0, 0, 255), 3, 4, 0);
-
-//    cout<<"Tracking::GrabImageRGBD "<<endl;
-//    image = imread(imD);
-//    cv::namedWindow( "Current Depth Frame", cv::WINDOW_AUTOSIZE );
-//    cv::imshow("Current Depth Frame",imD);
-//    cv::waitKey(0);
-
     return mCurrentFrame.mTcw.clone();
 }
 
@@ -1153,7 +1141,7 @@ void Tracking::CreateNewKeyFrame()
 
     mpLocalMapper->SetNotStop(false);
 
-	mpPointCloudMapping->insertKeyFrame( pKF, this->mImRGB, this->mImDepth );
+    mpPointCloudMapping->insertKeyFrame( pKF, this->mImRGB, this->mImDepth );
 
     mnLastKeyFrameId = mCurrentFrame.mnId;
     mpLastKeyFrame = pKF;

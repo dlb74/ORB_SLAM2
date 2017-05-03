@@ -28,18 +28,17 @@
 
 
 
-
-
 namespace ORB_SLAM2
 {
 
-FrameDrawer::FrameDrawer(Map* pMap):mpMap(pMap)
+FrameDrawer::FrameDrawer(System* fdpSystem, Map* pMap):fdmpSystem(fdpSystem),mpMap(pMap)
 {
     mState=Tracking::SYSTEM_NOT_READY;
     mIm = cv::Mat(480,640,CV_8UC3, cv::Scalar(0,0,0));
     mImRGB = cv::Mat(480,640,CV_8UC3, cv::Scalar(0,0,0));
     mImDepth = cv::Mat(480,640,CV_8UC3, cv::Scalar(0,0,0));
 
+    fdmpSystem = fdpSystem;
 }
 
 
@@ -97,6 +96,14 @@ cv::Mat FrameDrawer::DrawFrame()
     }
     else if(state==Tracking::OK) //TRACKING
     {
+//        if (!fdmpSystem->GetTrees().empty())
+//        {
+//            cout<<"fdmpSystem:  "<<fdmpSystem->GetTrees().size()<<endl;
+//            if (!curKeyFrame.empty())
+//                cout<<"pTracker: "<<endl<<curKeyFrame.back()->GetPose()<<endl;
+//        }
+
+
         mnTracked=0;
         mnTrackedVO=0;
         const float r = 5;
@@ -111,9 +118,15 @@ cv::Mat FrameDrawer::DrawFrame()
                 pt2.x=vCurrentKeys[i].pt.x+r;
                 pt2.y=vCurrentKeys[i].pt.y+r;
 
+
+
+
                 // This is a match to a MapPoint in the map
                 if(vbMap[i])
                 {
+
+
+
                     cv::rectangle(im,pt1,pt2,cv::Scalar(0,255,0));
                     cv::circle(im,vCurrentKeys[i].pt,2,cv::Scalar(0,255,0),-1);
                     mnTracked++;
@@ -162,7 +175,7 @@ cv::Mat FrameDrawer::DrawFrameDepth()
 
     }
 
-    colorReduce_ptr(im, imOut, 32);
+    //colorReduce_ptr(im, imOut, 32);
 
 
     return im;
@@ -209,6 +222,11 @@ void FrameDrawer::DrawTextInfo(cv::Mat &im, int nState, cv::Mat &imText)
 void FrameDrawer::Update(Tracking *pTracker)
 {
     unique_lock<mutex> lock(mMutex);
+
+    curKeyFrame = pTracker->mlpReferences;
+//    if (!curKeyFrame.empty())
+//        cout<<"pTracker: "<<curKeyFrame.back()->GetPose()<<endl;
+
     pTracker->mImGray.copyTo(mIm);
     pTracker->mImRGB.copyTo(mImRGB);
     pTracker->mImDepth.copyTo(mImDepth);

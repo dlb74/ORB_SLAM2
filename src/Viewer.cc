@@ -21,7 +21,10 @@
 #include "Viewer.h"
 #include <pangolin/pangolin.h>
 
+
 #include <mutex>
+
+
 
 namespace ORB_SLAM2
 {
@@ -138,9 +141,66 @@ namespace ORB_SLAM2
 
             cv::Mat imDepth = mpFrameDrawer->DrawFrameDepth();
 
+            if (!mpFrameDrawer->curKeyFrame.empty())
+            {
+                cv::Mat camPose = mpFrameDrawer->curKeyFrame.back()->GetPose();
+
+                if (!mpSystem->GetTrees().empty())
+                {
+//                    cout<<"mpSystem->GetTrees().size(): "<<mpSystem->GetTrees().size()<<endl;
+//                    for (int i = 0 ; i < mpSystem->GetTrees().size(); i++)
+//                    {
+//                        cout<<"tree: "<<i<<endl<<mpSystem->GetTrees()[i].center<<endl;
+//                    }
+
+    //                mpFrameDrawer->curKeyFrame.back()->GetPose();
+
+                    //draw trees
+//                    double PI = 3.1415926;
+                    //zuo -
+                    float thetay = atan2(-1 * camPose.ptr<float>(0)[2], sqrt(camPose.ptr<float>(1)[2]*camPose.ptr<float>(1)[2]
+                                                                         + camPose.ptr<float>(2)[2]*camPose.ptr<float>(2)[2])) / PI * 180;
+
+                    //zuo +
+//                    double thetay1 = atan2(-1 * camPose.ptr<float>(2)[0], sqrt(camPose.ptr<float>(2)[1]*camPose.ptr<float>(2)[1]
+//                                                                         + camPose.ptr<float>(2)[2]*camPose.ptr<float>(2)[2])) / PI * 180;
+
+                    float absTheta = cameraRotationAngle(thetay, camPose);
+
+                    thetaList.push_back(absTheta);
+
+                    x0 = camPose.ptr<float>(0)[3];
+                    y0 = camPose.ptr<float>(2)[3];
+                    camera_k = tan((90+absTheta)*PI/180);
+
+                    if (thetaList.size() >= 3 && fabs(thetaList[thetaList.size()-1] - thetaList[thetaList.size()-2]) < 20 )
+                    {
+                        absTheta = (thetaList[thetaList.size()-1] + thetaList[thetaList.size()-2] + thetaList[thetaList.size()-3])/3;
+                        sawTrees(absTheta, camPose, im);
+                    }else
+                    {
+                        sawTrees(absTheta, camPose, im);
+                    }
+
+
+//                    cout<<"thetaysystem: "<<cameraRotationAngle(thetay, camPose)<<endl;
+//                    cout<<"pose: "<<camPose<<endl;
+//                    cout<<"pose23: "<<camPose.ptr<float>(2)[3]<<endl;
+
+                    Tree closestTree = findClosestTree( camPose );
+
+                    cout<<"closestTreex: "<<closestTree.center.x<<endl;
+                    cout<<"closestTreey: "<<closestTree.center.y<<endl;
+
+                    NavigateToClosestTree(im, closestTree, absTheta);
+
+                }
+            }
+
+
+
+
             cv::imshow("ORB-SLAM2: Current Frame",im);
-
-
 
             cv::imshow("Depth Image",imDepth);
 
@@ -176,6 +236,361 @@ namespace ORB_SLAM2
         }
 
         SetFinish();
+    }
+
+    void Viewer::NavigateToClosestTree(cv::Mat& im, Tree tree, float abstheta)
+    {
+        float x1 = tree.center.x;
+        float y1 = tree.center.y;
+
+        float xtree = x1-x0;
+        float ytree = y1-y0;
+
+        float treeTheta = getTreeTheta(xtree, ytree);
+//        if ((treeTheta - abstheta) < 180 && (treeTheta - abstheta) > 0)
+//        {
+
+//            cout<<"left"<<endl;
+//        }else if ((treeTheta - abstheta) < 0)
+//        {
+//            cout<<"right"<<endl;
+//        }
+
+        cout<<"treeTheta: "<<treeTheta<<endl;
+        cout<<"abstheta: "<<abstheta<<endl;
+
+
+        int treePosition = getTreePosition(abstheta, x1, y1);
+        if (treePosition > 300 && treePosition < 340)
+        {
+            cout<<"go ahead"<<endl;
+            if (sqrt((xtree*xtree)+(ytree*ytree)) < 1)
+            {
+                cout<<"go ahead and Now Stop"<<endl;
+            }
+        }
+        else if (abstheta < 180)
+        {
+            if (treeTheta>abstheta && treeTheta < (abstheta+180))
+            {
+                cout<<"left"<<endl;
+            }else
+            {
+                cout<<"right"<<endl;
+            }
+        }else{
+            if (treeTheta<abstheta && treeTheta > (abstheta-180))
+            {
+                cout<<"right"<<endl;
+            }else
+            {
+                cout<<"left"<<endl;
+            }
+        }
+    }
+
+    /**
+     * @brief Viewer::findClosestTree
+     *
+     * @param currentPose
+     * @return the closest tree
+     */
+    Tree Viewer::findClosestTree(cv::Mat currentPose)
+    {
+        Tree closestTree = mpSystem->GetTrees()[0];
+
+
+        for (size_t i = 0; i < mpSystem->GetTrees().size(); i++)
+        {
+
+            float x1 = mpSystem->GetTrees()[i].center.x;
+            float y1 = mpSystem->GetTrees()[i].center.y;
+            float disTreeCamera = sqrt( (x0-x1)*(x0-x1)+(y0-y1)*(y0-y1) );
+
+            float closest_x1 = closestTree.center.x;
+            float closest_y1 = closestTree.center.y;
+            float closest_disTreeCamera = sqrt( (x0-closest_x1)*(x0-closest_x1)+(y0-closest_y1)*(y0-closest_y1) );
+
+            if (disTreeCamera < closest_disTreeCamera)
+            {
+                closestTree = mpSystem->GetTrees()[i];
+
+            }
+        }
+
+        return closestTree;
+    }
+
+    /**
+     * @brief Viewer::getTreeTheta
+     * @param xtree
+     * @param ytree
+     * @return the angle between x-axis and view line from camera to tree.
+     */
+    float Viewer::getTreeTheta(float xtree, float ytree)
+    {
+        float thetaTree = 0;
+
+        //right top area
+        if (xtree > 0 && ytree > 0)
+        {
+            thetaTree = 360-(atan(xtree/ytree)/3.1415926*180);
+        }
+        //left top area
+        if (xtree < 0 && ytree > 0)
+        {
+            thetaTree = -(atan(xtree/ytree)/3.1415926*180);
+        }
+        //left bottom area
+        if (xtree < 0 && ytree < 0)
+        {
+            thetaTree = 180-(atan(xtree/ytree)/3.1415926*180);
+        }
+        //right bottom area
+        if (xtree > 0 && ytree < 0)
+        {
+            thetaTree = 180-(atan(xtree/ytree)/3.1415926*180);
+        }
+
+        return thetaTree;
+    }
+
+    /**
+     * @brief Viewer::getTreePosition
+     * @param abstheta
+     * @param x1
+     * @param y1
+     * @return
+     */
+    float Viewer::getTreePosition(float abstheta, float x1, float y1)
+    {
+        float treePosiX;
+
+        float disMidLine = (camera_k*x1 + (-y1) + (-((x0 * camera_k) - y0))) / sqrt((camera_k*camera_k) + 1);
+
+        float disTreeCamera = sqrt( (x0-x1)*(x0-x1)+(y0-y1)*(y0-y1) );
+
+        float disCamera = sqrt( (disTreeCamera*disTreeCamera) - (disMidLine*disMidLine) );
+
+        float screenWideHalf = disCamera/2;
+
+        float thetaTree = getTreeTheta(x1-x0, y1-y0);
+
+//        float radius = mpSystem->GetTrees()[i].radius;
+
+//        float realRadius = fabs((mImageWidth/2) * radius / screenWideHalf)/2;
+
+        if ( ( abstheta > 0 && abstheta < 30 ) && thetaTree > 330 )
+        {
+            treePosiX = 330 + abs(disMidLine * 320 / screenWideHalf);
+        }
+        else if ( abstheta > 330  && ( thetaTree > 0 && thetaTree < 30 ))
+        {
+            treePosiX = 330 - abs(disMidLine * 320 / screenWideHalf);
+        }
+        else if (thetaTree > abstheta)
+        {
+            treePosiX = 330 - abs(disMidLine * 320 / screenWideHalf);
+        }
+        else
+        {
+            treePosiX = 330 + abs(disMidLine * 320 / screenWideHalf);
+        }
+        return treePosiX;
+    }
+
+    /**
+     * @brief Viewer::getRealRadius
+     * @param i
+     * @param x1
+     * @param y1
+     * @return
+     */
+    float Viewer::getRealRadius(int i, float x1, float y1)
+    {
+        float disMidLine = (camera_k*x1 + (-y1) + (-((x0 * camera_k) - y0))) / sqrt((camera_k*camera_k) + 1);
+
+        float disTreeCamera = sqrt( (x0-x1)*(x0-x1)+(y0-y1)*(y0-y1) );
+
+        float disCamera = sqrt( (disTreeCamera*disTreeCamera) - (disMidLine*disMidLine) );
+
+        float screenWideHalf = disCamera/2;
+        float radius = mpSystem->GetTrees()[i].radius;
+
+        return fabs((mImageWidth/2) * radius / screenWideHalf)/2;
+    }
+
+    /**
+     * @brief Viewer::sawTrees
+     * @param abstheta
+     * @param currentPose
+     * @param im
+     */
+    void Viewer::sawTrees(float abstheta, cv::Mat currentPose, cv::Mat& im)
+    {
+
+
+        cout<<"abstheta: "<<abstheta<<endl;
+        for (size_t i = 0 ; i < mpSystem->GetTrees().size(); i++)
+        {
+            cout<<"tree: "<<i<<endl<<mpSystem->GetTrees()[i].center<<"------"<<mpSystem->GetTrees()[i].radius<<endl;
+
+            Tree tree = mpSystem->GetTrees()[i];
+
+            float x1 = tree.center.x;
+            float y1 = tree.center.y;
+
+            float treePosiX = getTreePosition(abstheta, x1, y1);
+
+            cout<<"treePosiX: "<< treePosiX <<endl;
+
+            float ux = 0;
+            float uy = 0;
+            if (abstheta==0 || abstheta==360)
+            {
+                ux = 0;
+                uy = 1;
+            }
+            else if (abstheta==90)
+            {
+                ux = -1;
+                uy = 0;
+            }
+            else if (abstheta==180)
+            {
+                ux = 0;
+                uy = -1;
+            }
+            else if (abstheta==270)
+            {
+                ux = 1;
+                uy = 0;
+            }
+
+            else if (abstheta>0 && abstheta<180)
+            {
+                ux = - 1;
+                uy = (1/tan(abstheta*3.1415926/180));
+
+            }
+            else if (abstheta>180 && abstheta<360)
+            {
+                ux = + 1;
+                uy = - (1/tan(abstheta*3.1415926/180));
+            }
+
+//            if (treePosiX <600 && treePosiX > 30 && IsPointInCircularSector3(x0, y0, ux, uy, 100, 0.8660254, x1, y1))
+
+            if (treePosiX <620 && treePosiX > 20 && IsPointInCircularSector(x0,y0,ux+x0,uy+y0,100,0.454,x1,y1))
+            {
+                //cout<<"realRadius      "<<realRadius<<endl;
+                float realRadius = getRealRadius(i, x1, y1);
+
+                cv::rectangle(im,cv::Point(treePosiX-realRadius,20),cv::Point(treePosiX+realRadius, 300),cv::Scalar(255,0,0), 3);
+            }
+        }
+
+        cout<<"------------------------------------------------------------------------: "<<endl<<endl;
+
+    }
+
+
+
+    bool Viewer::IsPointInCircularSector(
+        float cx, float cy, float ux, float uy, float r, float theta,
+        float px, float py)
+    {
+        assert(cosTheta > -1 && cosTheta < 1);
+        assert(squaredR > 0.0f);
+
+        // D = P - C
+        float dx = px - cx;
+        float dy = py - cy;
+
+        // |D| = (dx^2 + dy^2)^0.5
+        float length = sqrt((dx * dx) + (dy * dy));
+
+        // |D| > r
+        if (length > r)
+            return false;
+
+        // Normalize D
+        dx /= length;
+        dy /= length;
+
+        float unx = (ux-cx)/sqrt(((ux-cx)*(ux-cx)) + ((uy-cy)*(uy-cy)));
+        float uny = (uy-cy)/sqrt(((ux-cx)*(ux-cx)) + ((uy-cy)*(uy-cy)));
+
+
+
+        // acos(D dot U) < theta
+        return acos((dx * unx) + (dy * uny)) < theta;
+    }
+
+    bool Viewer::IsPointInCircularSector1(
+        float cx, float cy, float ux, float uy, float squaredR, float cosTheta,
+        float px, float py)
+    {
+        assert(cosTheta > -1 && cosTheta < 1);
+        assert(squaredR > 0.0f);
+
+        // D = P - C
+        float dx = px - cx;
+        float dy = py - cy;
+
+        // |D|^2 = (dx^2 + dy^2)
+        float squaredLength = dx * dx + dy * dy;
+
+        // |D|^2 > r^2
+        if (squaredLength > squaredR)
+            return false;
+
+        // |D|
+        float length = sqrt(squaredLength);
+
+        float unx = ux/sqrt((ux*ux) + (uy*uy));
+        float uny = uy/sqrt((ux*ux) + (uy*uy));
+    //    ux = ux * ;
+        cout<<"dx: "<<dx<<endl;
+        cout<<"unx: "<<unx<<endl;
+        cout<<"dy: "<<dy<<endl;
+        cout<<"uny: "<<uny<<endl;
+        cout<<"length * cosTheta: "<<length * cosTheta<<endl;
+        cout<<"(dx * unx) + (dy * uny): "<<(dx * unx) + (dy * uny)<<endl;
+
+        // D dot U > |D| cos(theta)
+        return dx * unx + dy * uny > length * cosTheta;
+    }
+
+
+
+    float Viewer::cameraRotationAngle(float theta, cv::Mat currentPose)
+    {
+
+        if (theta < 0 && currentPose.at<float>(2,2) > 0)
+        {
+    //        one = true;
+            return -theta;
+        }
+        else if (theta < 0 && currentPose.at<float>(2,2) < 0)
+        {
+            //two = true;
+            return -(-90-(theta)) + 90;
+        }
+        else if (theta > 0 && currentPose.at<float>(2,2) < 0)
+        {
+            //three = true;
+            return theta + 180;
+        }
+        else if (theta > 0 && currentPose.at<float>(2,2) > 0)
+        {
+            //four = true;
+            return (90-theta) + 270;
+        }
+        else
+        {
+            return 0;
+        }
     }
 
     void Viewer::RequestFinish()
