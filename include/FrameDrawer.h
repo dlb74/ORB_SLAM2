@@ -24,6 +24,7 @@
 #include "Tracking.h"
 #include "MapPoint.h"
 #include "Map.h"
+#include "System.h"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d/features2d.hpp>
@@ -37,11 +38,12 @@ namespace ORB_SLAM2
 
 class Tracking;
 class Viewer;
+class System;
 
 class FrameDrawer
 {
 public:
-    FrameDrawer(Map* pMap);
+    FrameDrawer(System* fdpSystem, Map* pMap);
 
     // Update info from the last processed frame.
     void Update(Tracking *pTracker);
@@ -51,6 +53,8 @@ public:
 
 
     cv::Mat DrawFrameDepth();
+
+    list<KeyFrame*> curKeyFrame;
 
 protected:
 
@@ -72,6 +76,9 @@ protected:
     Map* mpMap;
 
     std::mutex mMutex;
+
+
+    System* fdmpSystem;
 
 };
 

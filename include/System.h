@@ -37,6 +37,7 @@
 #include "Viewer.h"
 #include <unistd.h>
 #include "pointcloudmapping.h"
+#include "Tree.h"
 
 class PointCloudMapping; 
 
@@ -60,6 +61,14 @@ public:
         RGBD=2
     };
 
+//    struct Tree
+//    {
+//        cv::Point2f center;
+//        double radius;
+//        double height;
+//        int divPart; //this case is divide by 6 parts
+//    };
+
 public:
 
     // Initialize the SLAM system. It launches the Local Mapping, Loop Closing and Viewer threads.
@@ -75,6 +84,8 @@ public:
     // Input depthmap: Float (CV_32F).
     // Returns the camera pose (empty if tracking fails).
     cv::Mat TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const double &timestamp);
+
+    cv::Mat TrackRGBDTrees(const cv::Mat &im, const cv::Mat &depthmap, const double &timestamp, std::vector<Tree> trees);
 
     // Proccess the given monocular frame
     // Input images: RGB (CV_8UC3) or grayscale (CV_8U). RGB is converted to grayscale.
@@ -129,6 +140,11 @@ public:
     shared_ptr<PointCloudMapping> GetPointCloudMapping();
 
     LoopClosing* GetLoopCloser();
+
+    std::vector<Tree> GetTrees();
+
+    bool isDetected;
+    bool startDetect;
 
 private:
 
@@ -188,7 +204,7 @@ private:
     std::vector<cv::KeyPoint> mTrackedKeyPointsUn;
     std::mutex mMutexState;
 
-
+    std::vector<Tree> treeDB;
 
 };
 

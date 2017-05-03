@@ -26,6 +26,7 @@
 #include "MapDrawer.h"
 #include "Tracking.h"
 #include "System.h"
+#include "Tree.h"
 
 #include <mutex>
 
@@ -36,6 +37,7 @@ class Tracking;
 class FrameDrawer;
 class MapDrawer;
 class System;
+class Tree;
 
 class Viewer
 {
@@ -55,6 +57,27 @@ public:
     bool isStopped();
 
     void Release();
+
+    float cameraRotationAngle(float theta, cv::Mat currentPose);
+
+    void sawTrees(float abstheta, cv::Mat currentPose, cv::Mat& im);
+
+    bool IsPointInCircularSector(
+        float cx, float cy, float ux, float uy, float r, float theta,
+        float px, float py);
+
+    bool IsPointInCircularSector1(
+        float cx, float cy, float ux, float uy, float squaredR, float cosTheta,
+        float px, float py);
+
+    float getTreeTheta(float xtree, float ytree);
+
+    float getTreePosition(float abstheta, float x1, float y1);
+    float getRealRadius(int i, float x1, float y1);
+
+    Tree findClosestTree(cv::Mat currentPose);
+
+    void NavigateToClosestTree(cv::Mat& im, Tree tree, float abstheta);
 
 private:
 
@@ -80,6 +103,16 @@ private:
     bool mbStopped;
     bool mbStopRequested;
     std::mutex mMutexStop;
+
+    vector<float> thetaList;
+
+    double PI = 3.1415926;
+
+    float x0;
+    float y0;
+//    float x1;
+//    float y1;
+    float camera_k;
 
 };
 
