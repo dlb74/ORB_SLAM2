@@ -37,12 +37,10 @@ Required by g2o (see below). Download and install instructions can be found at: 
 
 ## CGAL
 
-# Debian or Linux Mint
+```
 sudo apt-get install libcgal-dev # install the CGAL library
 sudo apt-get install libcgal-demo # install the CGAL demos
-
-# ArchLinux
-sudo pacman -S cgal
+```
 
 ## DBoW2 and g2o (Included in Thirdparty folder)
 We use modified versions of the [DBoW2](https://github.com/dorian3d/DBoW2) library to perform place recognition and [g2o](https://github.com/RainerKuemmerle/g2o) library to perform non-linear optimizations. Both modified libraries (which are BSD) are included in the *Thirdparty* folder.
