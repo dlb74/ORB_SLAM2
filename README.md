@@ -35,6 +35,15 @@ We use [OpenCV](http://opencv.org) to manipulate images and features. Dowload an
 ## Eigen3
 Required by g2o (see below). Download and install instructions can be found at: http://eigen.tuxfamily.org. **Required at least 3.1.0**.
 
+## CGAL
+
+# Debian or Linux Mint
+sudo apt-get install libcgal-dev # install the CGAL library
+sudo apt-get install libcgal-demo # install the CGAL demos
+
+# ArchLinux
+sudo pacman -S cgal
+
 ## DBoW2 and g2o (Included in Thirdparty folder)
 We use modified versions of the [DBoW2](https://github.com/dorian3d/DBoW2) library to perform place recognition and [g2o](https://github.com/RainerKuemmerle/g2o) library to perform non-linear optimizations. Both modified libraries (which are BSD) are included in the *Thirdparty* folder.
 
@@ -45,7 +54,10 @@ We provide some examples to process the live input of a monocular, stereo or RGB
 
 Clone the repository:
 ```
-git clone https://github.com/raulmur/ORB_SLAM2.git ORB_SLAM2
+git clone https://github.com/plu18/ORB_SLAM2.git ORB_SLAM2
+```
+```
+git clone https://github.com/plu18/orbslam_ros.git orbslam_ros
 ```
 
 We provide a script `build.sh` to build the *Thirdparty* libraries and *ORB-SLAM2*. Please make sure you have installed all required dependencies (see section 2). Execute:
