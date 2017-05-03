@@ -1,9 +1,8 @@
-<<<<<<< 229e5ec72442299ff887c8300817933cfe8c28fa
+
 # ORB_SLAM2
-my modified ORB slam
+Scott modified ORB_SLAM2
 =======
-# ORB-SLAM2
-**Authors:** [Peiwen1 (Scott) Luo](https://github.com/plu18/ORB_SLAM2), [Raul Mur-Artal](http://webdiis.unizar.es/~raulmur/), [Juan D. Tardos](http://webdiis.unizar.es/~jdtardos/), [J. M. M. Montiel](http://webdiis.unizar.es/~josemari/) and [Dorian Galvez-Lopez](http://doriangalvez.com/) ([DBoW2](https://github.com/dorian3d/DBoW2))
+**Authors:** [Peiwen (Scott) Luo](https://github.com/plu18/ORB_SLAM2), [Raul Mur-Artal](http://webdiis.unizar.es/~raulmur/), [Juan D. Tardos](http://webdiis.unizar.es/~jdtardos/), [J. M. M. Montiel](http://webdiis.unizar.es/~josemari/) and [Dorian Galvez-Lopez](http://doriangalvez.com/) ([DBoW2](https://github.com/dorian3d/DBoW2))
 
 **1 May 2017**: Add tree detection and navigation method into the ORBSLAM2.
 
@@ -19,8 +18,6 @@ alt="ORB-SLAM2" width="240" height="180" border="10" /></a>
 alt="ORB-SLAM2" width="240" height="180" border="10" /></a>
 <a href="https://www.youtube.com/embed/kPwy8yA4CKM" target="_blank"><img src="http://img.youtube.com/vi/kPwy8yA4CKM/0.jpg" 
 alt="ORB-SLAM2" width="240" height="180" border="10" /></a>
-
-
 
 
 #2. Prerequisites
