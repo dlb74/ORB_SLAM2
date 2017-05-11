@@ -143,6 +143,12 @@ public:
 
     std::vector<Tree> GetTrees();
 
+    void setPose(cv::Mat thePose);
+
+    cv::Mat getPose();
+
+
+
     bool isDetected;
     bool startDetect;
 
@@ -205,6 +211,8 @@ private:
     std::mutex mMutexState;
 
     std::vector<Tree> treeDB;
+
+    cv::Mat pose;
 
 };
 
