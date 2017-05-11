@@ -66,7 +66,7 @@ pcl::PointCloud< PointCloudMapping::PointT >::Ptr PointCloudMapping::generatePoi
         for ( int n=0; n<depth.cols; n++ )
         {
             float d = depth.ptr<float>(m)[n];
-            if (d < 0.2 || d>3)
+            if (d < 0.2 || d>2)
                 continue;
             PointT p;
             p.z = d;

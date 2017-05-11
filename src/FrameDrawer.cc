@@ -34,9 +34,9 @@ namespace ORB_SLAM2
 FrameDrawer::FrameDrawer(System* fdpSystem, Map* pMap):fdmpSystem(fdpSystem),mpMap(pMap)
 {
     mState=Tracking::SYSTEM_NOT_READY;
-    mIm = cv::Mat(480,640,CV_8UC3, cv::Scalar(0,0,0));
+    mIm = cv::Mat(480,640,CV_8UC1, cv::Scalar(0,0,0));
     mImRGB = cv::Mat(480,640,CV_8UC3, cv::Scalar(0,0,0));
-    mImDepth = cv::Mat(480,640,CV_8UC3, cv::Scalar(0,0,0));
+    mImDepth = cv::Mat(480,640,CV_16UC1, cv::Scalar(0,0,0));
 
     fdmpSystem = fdpSystem;
 }

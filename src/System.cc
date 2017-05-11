@@ -122,6 +122,11 @@ namespace ORB_SLAM2
 
         startDetect = false;
         isDetected = false;
+
+        pose = cv::Mat_<float>(4,4) << 1,0,0,0,
+                                        0,1,0,0,
+                                        0,0,1,0,
+                                        0,0,0,1;
     }
 
     cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timestamp)
@@ -282,6 +287,9 @@ namespace ORB_SLAM2
             //cout<<"trees: "<<treeDB.size()<<endl;
         }
 
+//        cout<<"Tcwsize: "<<Tcw.size()<<endl;
+
+        pose = Tcw;
         return Tcw;
     }
 
@@ -588,6 +596,18 @@ namespace ORB_SLAM2
     {
         unique_lock<mutex> lock(mMutexState);
         return treeDB;
+    }
+
+    void System::setPose(cv::Mat thePose)
+    {
+        unique_lock<mutex> lock(mMutexState);
+        pose = thePose;
+    }
+
+    cv::Mat System::getPose()
+    {
+        unique_lock<mutex> lock(mMutexState);
+        return pose;
     }
 
 
