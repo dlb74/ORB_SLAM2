@@ -60,7 +60,7 @@ public:
 
     float cameraRotationAngle(float theta, cv::Mat currentPose);
 
-    void sawTrees(float abstheta, cv::Mat currentPose, cv::Mat& im);
+    void sawTrees(cv::Mat& im);
 
     bool IsPointInCircularSector(
         float cx, float cy, float ux, float uy, float r, float theta,
@@ -72,12 +72,20 @@ public:
 
     float getTreeTheta(float xtree, float ytree);
 
-    float getTreePosition(float abstheta, float x1, float y1);
-    float getRealRadius(int i, float x1, float y1);
+    float getTreePosition(Tree tree);
+    float getRealRadius(Tree tree);
 
-    Tree findClosestTree(cv::Mat currentPose);
+    Tree findClosestTree();
 
-    void NavigateToClosestTree(cv::Mat& im, Tree tree, float abstheta);
+    void highPrecisionNaviByDepth(const cv::Mat& depth);
+
+    void NavigateToClosestTree(cv::Mat& im, Tree tree);
+
+    float getCamVectorX();
+    float getCamVectorY();
+
+    float absTheta;
+
 
 private:
 
@@ -113,6 +121,15 @@ private:
 //    float x1;
 //    float y1;
     float camera_k;
+
+    cv::Mat dilate_element;
+
+
+
+    void drawLeftArrow(cv::Mat& picture);
+    void drawRightArrow(cv::Mat& picture);
+    void drawFrontArrow(cv::Mat& picture);
+    void drawCorrectPose(cv::Mat& picture);
 
 };
 
